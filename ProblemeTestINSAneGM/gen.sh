@@ -5,10 +5,12 @@ COMP="g++"
 
 for num in $*
 do
+    echo "Version $num"
     $COMP v$num.* -o launch
     for inFile in *.in
     do
         name=$(basename -s .in $inFile)
+        echo "  Test $name"
         out=$(cat $inFile | ./launch | uniq)
         echo "$out" | wc -l > v$num\_$name.out
         echo "$out" >> v$num\_$name.out
