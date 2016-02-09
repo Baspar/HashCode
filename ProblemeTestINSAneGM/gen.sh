@@ -10,9 +10,10 @@ do
     for inFile in *.in
     do
         name=$(basename -s .in $inFile)
-        echo "  Test $name"
+        echo -n "  Test $name..."
         out=$(cat $inFile | ./launch | uniq)
         echo "$out" | wc -l > v$num\_$name.out
+        cat v$num\_$name.out
         echo "$out" >> v$num\_$name.out
     done
 done
