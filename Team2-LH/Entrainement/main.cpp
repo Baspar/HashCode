@@ -8,8 +8,8 @@ int main()
 #define TROU 0
 #define CARRE 3
 
-    std::freopen("ex.in","r",stdin);
-    std::freopen("ex.out","w",stdout);
+    std::freopen("logo.in","r",stdin);
+    std::freopen("logo.out","w",stdout);
     int32_t N,M;
     std::string line;
     std::cin >> N >> M;
@@ -68,7 +68,7 @@ int main()
             }
             else
             {
-                scores[i][j]=MP(MP(0,TROU),MP(i,j));
+                scores[i][j]=MP(MP(-1,TROU),MP(i,j));
             }
         }
     }
@@ -79,7 +79,7 @@ int main()
             if(vecteur[j][i] != 0)
             {
                 l=j;
-                while(j+1 < N && vecteur[j+1][i] !=0)
+                while( j+1 < N && vecteur[j+1][i] !=0)
                 {
                     j++;
                 }
@@ -91,7 +91,7 @@ int main()
                     if(res >= scores[k][i].first.first)
                         compteur++;
                 }
-                if(compteur >= static_cast<double>(res*3/4))
+                if(compteur >= res)
                 {
                     modifie =true;
                 }
@@ -110,7 +110,7 @@ int main()
                             if(length-1 >= 0)
                                 scores[x][u]= MP(MP(length-1,LIGNE),MP(x,y));
                             else
-                                scores[x][u]= MP(MP(0,TROU),MP(x,y));
+                                scores[x][u]= MP(MP(-1,TROU),MP(x,y));
 
                         }
                     }
@@ -132,7 +132,7 @@ int main()
     {
         for(int32_t j=0; j<M; j++)
         {
-            if(visited[i][j] == false )
+            if(visited[i][j] == false)
             {
                 int32_t l = scores[i][j].first.first;
                 int32_t x = scores[i][j].second.first;
@@ -144,7 +144,7 @@ int main()
                 {
                     auto s="PAINT_LINE "+ std::to_string(x) + " " + std::to_string(y) +" "+ std::to_string(x+l-1) + " " + std::to_string(y) + "\n";
                     sol.push_back(s);
-                    for(int32_t k=x; k<=x+l; k++)
+                    for(int32_t k=x; k<x+l; k++)
                     {
                         visited[k][y]=true;
                     }
@@ -154,7 +154,7 @@ int main()
                 {
                     auto s="PAINT_LINE "+ std::to_string(x) + " " + std::to_string(y) +" "+ std::to_string(x) + " " + std::to_string(y+l-1) + "\n";
                     sol.push_back(s);
-                    for(int32_t k=y; k<=y+l; k++)
+                    for(int32_t k=y; k<y+l; k++)
                     {
                         visited[x][k]=true;
                     }
@@ -164,6 +164,8 @@ int main()
             }
         }
     }
+    std::sort(sol.begin(),sol.end());
+    sol.erase( unique( sol.begin(), sol.end() ), sol.end() );
     std::cout << sol.size() << std::endl;
     std::for_each(sol.begin(),sol.end(),[](auto & x)
     {
