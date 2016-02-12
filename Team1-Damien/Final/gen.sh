@@ -1,5 +1,5 @@
 #!/bin/bash
-COMP="g++"
+COMP="g++ --std=c++11"
 
 [ $# -eq 0 ] && echo "Rentrez au moins un numero"
 [ "$1" == "clean" ] && rm -f *.out && exit 0
