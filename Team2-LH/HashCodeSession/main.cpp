@@ -4,7 +4,10 @@
 
 /// ---------------------------------------- FONCTIONNELLE MAIS LENT ---------------------------------------------------/
 /// Tout le code est commenté, si quelqu'un est deter pour l'améliorer/le corriger (sans doute)
+/// La plus grosse opti est sans doute ligne 520 (probleme sans doute avec un objet que j'ai oublié de passer par référence et qui n'est pas
+/// mis a jour, du coup je recalcule la priority_queue a toutes les itérations
 /// Pour faire avancer le jeu
+
 ui __TOUR__NUMERO__ = 0;
 std::vector<std::string > commandes_a_faire;
 
