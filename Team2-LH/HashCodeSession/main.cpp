@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
 #include <algorithm>
 #define ui int
-
+/// ---------------------------------------- NON FONCTIONNELLE ---------------------------------------------------/
 /// Pour faire avancer le jeu
 ui __TOUR__NUMERO__ = 0;
 std::vector<std::string > commandes_a_faire;
