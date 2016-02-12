@@ -3,6 +3,7 @@
 #define ui int
 
 /// ---------------------------------------- FONCTIONNELLE MAIS LENT ---------------------------------------------------/
+/// Tout le code est commenté, si quelqu'un est deter pour l'améliorer/le corriger (sans doute)
 /// Pour faire avancer le jeu
 ui __TOUR__NUMERO__ = 0;
 std::vector<std::string > commandes_a_faire;
