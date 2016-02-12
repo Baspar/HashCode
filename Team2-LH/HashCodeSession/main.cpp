@@ -1,9 +1,8 @@
-#include <bits/stdc++.h>
-#include <algorithm>
+#include <bits/stdc++.h> // bibli c++
+#include <algorithm>     // sort,unique,erase...
 #define ui int
-#define FICHIER "ex"
 
-/// ---------------------------------------- NON FONCTIONNELLE ---------------------------------------------------/
+/// ---------------------------------------- FONCTIONNELLE MAIS LENT ---------------------------------------------------/
 /// Pour faire avancer le jeu
 ui __TOUR__NUMERO__ = 0;
 std::vector<std::string > commandes_a_faire;
@@ -17,6 +16,9 @@ void updatePriority();
 
 
 /// ----------------------------------------------------- Classe ---------------------------------------------/
+/// Item:
+/// poids
+/// code : pour les identifier
 class Item
 {
 public:
@@ -39,10 +41,19 @@ public:
     ui poids_;
 };
 
+
+/// Ordre :
+/// Coordonnées spatiales x,y
+/// Code
+/// poids de la commande (sum poids des items
+/// liste d'items
+
+
 class Ordre
 {
 public:
     Ordre(ui x__,ui y__,ui code) : x_(x__), y_(y__), code_(code)  {};
+    // Constructeur par affectation
     Ordre& operator=(const Ordre& rhs)
     {
         x_ = rhs.x();
@@ -57,6 +68,8 @@ public:
     {
         return true;
     }
+
+    // Comparer deux order
     bool operator==(const Ordre rhs)
     {
         ui j=0;
@@ -90,6 +103,8 @@ public:
         items.erase(items.begin(),items.end());
         items.clear();
     }
+
+    /// Le poids ne peux pas etre connu des l'appel du constructeur
     void setPoids() noexcept
     {
         poids_=0;
@@ -106,6 +121,7 @@ public:
     {
         return code_;
     }
+
     ui x_;
     ui y_;
     ui code_;
@@ -114,10 +130,12 @@ public:
     std::vector<Item> items;
 };
 
+/// Warehouse
+/// x,y,code,liste d'items et leur quantité
 class Warehouse
 {
 public:
-    // Tri completement inutil, juste pour supprimer les doublons
+    // Tri completement inutile, juste pour supprimer des doublons avec la commande unique et sort
     friend bool operator<(const Warehouse&a,const Warehouse&b )
     {
         return a.code() < b.code();
@@ -175,6 +193,16 @@ public:
     ui code_;
     std::vector<Item> items;
 };
+#define paire std::pair<Ordre&,std::vector<Warehouse> >
+
+
+/// Robot
+/// x,y,chargemax supporté
+/// poidsactuel (pas utilisé)
+/// occupe (bool) si le robot est dispo
+/// nbreTourUtilise : valeur qui indique a quelle tour le robot sera de nouveau disponible (se base sur __TOUR__NUMERO__)
+/// tempsLivraison : a partir du moment ou le robot est arrivé a l'endroit il lui faut encore livré chaque objet a chaque tour
+/// ce temps est incrémenter dès que le robot est occupe= true & nbreTourUtilise = __TOUR__NUMERO__
 
 class Robot
 {
@@ -201,12 +229,22 @@ public:
         items.erase(items.begin(),items.end());
         items.clear();
     }
-    void ChargeOrdre(const Ordre& o,const ui timeloading)
+
+    /// Met a jour les infos sur le colis du robot (l'order qu'il transporte)
+    /// ainsi que quand il sera disponible a nouveau
+    void ChargeOrdre(const paire& p,const ui timeloading)
     {
         occupe_ = true ;
-        nbreTourUtilise_ = __TOUR__NUMERO__ + timeloading + distance(x_,y_,o.x(),o.y());
-        ordreCharge_ = o;
-        std::cerr << "robot "<< numero_ << " prend en charge " << o.code_ << " jusqu'au " << nbreTourUtilise_ << " tours"<<std::endl;
+        nbreTourUtilise_ = __TOUR__NUMERO__ + timeloading;
+        int x1=x_,y1=y_;
+        for(Warehouse w : p.second)
+        {
+            nbreTourUtilise_ += distance(x1,y1,w.x(),w.y());
+            x1=w.x(),y1=w.y();
+        }
+        nbreTourUtilise_+= distance(x1,y1,p.first.x(),p.first.y());
+        ordreCharge_ = p.first;
+        std::cerr << "robot "<< numero_ << " prend en charge " << p.first.code_ << " jusqu'au " << nbreTourUtilise_ << " tours"<<std::endl;
     }
     inline ui nbreTourUtilise() const
     {
@@ -258,6 +296,8 @@ public:
 /// ----------------------------------------------------- Variable Globale ---------------------------------------------/
 
 /// Variable utilisant les classes dessus
+
+/// Pour trier les orders, pour chaque robot cette variable prend la valeur du robot et les calculs de distance se font par rapport a elle
 Robot robotEnAction(-1,-1,0,-1);
 inline void  updateRobotenaction(const ui& x,const ui&y,const ui& num)
 {
@@ -268,22 +308,24 @@ inline void  updateRobotenaction(const Robot& r)
     robotEnAction=r;
 }
 
+
 std::vector<Warehouse> getWarehouseDisponible(Item);
 
 /// La priority queue des ordres
-#define paire std::pair<Ordre&,std::vector<Warehouse> >
 
 /// Comparateur d'ordre qui trie dans la priority queue
+/// Compare les distances entre robotEnAction et les warehouses séléctionnés
 auto comp = [](const paire &a,const paire &b )
 {
     //std::cerr << "Tri de la priority_queue" <<std::endl;
-    if(robotEnAction.x() == -1 && robotEnAction.y() == -1)       /// Il y a une erreur , retourne aléatoire
+    if(robotEnAction.x() == -1 && robotEnAction.y() == -1)       /// ne doit jamais arrivé
         return (rand() % 1 == 1);
     Ordre o1 = a.first;
     Ordre o2 = b.first;
     if(a.second.size() > b.second.size())                                   /// Heuristique: visiter deux warehouses toujours plus couteux que un
         return false;
     ui d1=std::numeric_limits<ui>::max(),d2=std::numeric_limits<ui>::max();
+
     /// Recherche du warehouse le plus pret
     /// Comparer distance drone en action et warehouse
     Warehouse buffWa(-1,-1,-1);
@@ -299,6 +341,7 @@ auto comp = [](const paire &a,const paire &b )
     {
         std::cerr << "YA UNE ERREUR";
     }
+
     else
         for(Warehouse w : a.second)
         {
@@ -308,7 +351,7 @@ auto comp = [](const paire &a,const paire &b )
             }
             else
             {
-                /// Si on a plusieurs warehouses a visiter, pas gérer encore (toujours un warehouse)
+                /// Si on a plusieurs warehouses a visiter, pas gérer encore (toujours un seul warehouse), mais au moins le code est déja prêt
                 d1+= distance(buffWa.x(),buffWa.y(),w.x(),w.y());
                 buffWa = w;
             }
@@ -344,14 +387,14 @@ auto comp = [](const paire &a,const paire &b )
     return d1 < d2;
 };
 
-/// La priority
+/// La priority queue qui sera un vecteur
 std::vector<paire> prioritequeue;
-//std::priority_queue<paire > prioritequeue;
-/// Update stock
+
+/// Pour faire tourner le jeu
 void updateUtil(Robot&r,paire&);
 bool updateWarehouse(Robot&r,paire &p,bool modifie);
-
 void bougerDrone();
+
 /// Variable globale contenant les listes d'objets
 std::vector<Item> items;
 std::vector<Warehouse> warehouses;
@@ -367,8 +410,7 @@ T distance(const T& a,const T& b,const T& c,const T& d)
     return ceil(pow(abs(c-a),2) + pow(abs(d-b),2));
 }
 
-
-///---> fonctionnelle
+/// Met a jour la priorityqueue
 void updatePriority()
 {
     /// Pour tous les ordres
@@ -421,7 +463,7 @@ void updatePriority()
                 if(suffisant == true)
                 {
                     n_trouve = true;
-                    std::vector<Warehouse *> ww = {w};
+                    std::vector<Warehouse > ww = {w};
                     prioritequeue.push_back(paire(o,ww));
                     break; // J'ai trouvé mon warehouse
                 }
@@ -439,15 +481,18 @@ void updatePriority()
     std::sort(prioritequeue.begin(),prioritequeue.end(),comp);
 }
 
+
+/// Le "main"
 void occuperDrone()
 {
     bool encoreEnLivraison = true;
-
-    while(!prioritequeue.empty() || encoreEnLivraison)
+    /// Tant que j'ai des orders qui sont délivrables
+    while(!prioritequeue.empty() || encoreEnLivraison )
     {
         __TOUR__NUMERO__++;
         //  std::cerr << "TOUR N'" << __TOUR__NUMERO__<< std::endl;
         bougerDrone();
+        /// Pour tous les robots
         for(Robot &r : robots)
         {
             if(r.occupe() == false && !prioritequeue.empty())
@@ -457,7 +502,6 @@ void occuperDrone()
                 paire p = prioritequeue.at(0);
 
                 /// Si il y a une douille de disponibilité, alors il faut refaire la priority en entier
-
                 if(updateWarehouse(r,p,false) == false)
                 {
                     std::cerr << "Il faut mettre a jour la priorityqueue"<<std::endl;
@@ -469,13 +513,17 @@ void occuperDrone()
                     std::cerr << "La derniere commande est "<< p.first.code()<< std::endl;
                     if(updateWarehouse(r,p,false) == true)
                         updateUtil(r,p);
+
+                    prioritequeue.clear();                /// J'aurais aimé faire ca seulement a la fin mais ce ne marche pas
+                    updatePriority();                     /// du coup il faut recalculer la priority queue a chaque fois
                 }
                 else
                 {
                     /// gérer les différents allez retour pour un order
                 }
-                prioritequeue.erase(prioritequeue.begin());
-                std::sort(prioritequeue.begin(),prioritequeue.end(),comp);
+                /*L'opti qui fait beuger */
+                //  prioritequeue.erase(prioritequeue.begin());
+                //  std::sort(prioritequeue.begin(),prioritequeue.end(),comp);
                 if(prioritequeue.empty())
                     break;
             }
@@ -508,7 +556,7 @@ updateWarehouse(Robot& r, paire &p,bool modifie)
         for(Warehouse &w : p.second)
         {
             /// Si c'est le warehouse qui contient l'item
-            if(w.items.at(i.code()).poids() >= i.poids())
+            if(w.items.at(i.code()).poids() >= i.poids() )
             {
                 trouve=true;
                 if(modifie == true)
@@ -517,7 +565,7 @@ updateWarehouse(Robot& r, paire &p,bool modifie)
                     // Load
                     std::string s = std::to_string(r.numero())+" L "+std::to_string(w.code())
                                     +" "+std::to_string(i.code())+" "+std::to_string(i.poids());
-                    commandes_a_faire.push_back(s);
+                    if(i.poids() > 0) commandes_a_faire.push_back(s);
                     // Update
                     w.items.at(i.code()).poids_-=i.poids();
                 }
@@ -534,7 +582,7 @@ updateWarehouse(Robot& r, paire &p,bool modifie)
         auto x = std::find(robots.begin(),robots.end(),r);
         if(x != robots.end())
         {
-            x->ChargeOrdre(p.first,c);  /// update robot de charge c, et d'ordre o
+            x->ChargeOrdre(p,c);  /// update robot de charge c, et d'ordre o
 
         }
     }
@@ -546,7 +594,7 @@ updateWarehouse(Robot& r, paire &p,bool modifie)
 /// Update liste des ordres
 void updateUtil(Robot &r,paire &p)
 {
-    updateWarehouse(r,p,true);
+    updateWarehouse(r,p,true);  /// Update les warehouses et drones et modifie leur stock
 
     ///met a jour les robots
 
@@ -556,7 +604,6 @@ void updateUtil(Robot &r,paire &p)
     if(x != orders.end())
     {
         orders.erase(std::remove(orders.begin(), orders.end(), *x), orders.end());
-        std::cerr << x->code()<< " a été pris en charge par le robot " << r.numero()<<std::endl;
     }
 
     /// Enregistrement
@@ -568,7 +615,7 @@ void bougerDrone()
 {
     for(Robot &r : robots)
     {
-        if(r.occupe() == false)
+        if(r.occupe() == false)         /// Robot pas occupé, mettre a jour son compteur
         {
             if(__TOUR__NUMERO__ > r.nbreTourUtilise())     /// Pour update
             {
@@ -576,24 +623,24 @@ void bougerDrone()
                 r.nbreTourUtilise_= __TOUR__NUMERO__;
             }
         }
-        else if(r.occupe() == true)
+        else if(r.occupe() == true)     /// Robot occupé
         {
-            if(r.tempsLivraison()-1 > 0)
+            if(r.tempsLivraison()-1 > 0)    /// Robot qui est train de deposer chez le client
             {
                 r.tempsLivraison_--;
                 r.nbreTourUtilise_++;
                 break;
             }
 
-            if(r.nbreTourUtilise() > __TOUR__NUMERO__)
+            if(r.nbreTourUtilise() > __TOUR__NUMERO__)  /// Robot qui avance vers le lieu de livraison
             {
 
             }
-            else if( r.nbreTourUtilise() == __TOUR__NUMERO__)
+            else if( r.nbreTourUtilise() == __TOUR__NUMERO__)   /// Robot qui est arrive a destination
             {
                 /// Délivré la commande
                 r.tempsLivraison_ = 0;
-                for(Item i : r.ordreCharge_.items)
+                for(Item &i : r.ordreCharge_.items)
                 {
                     if(i.poids() > 0)
                     {
@@ -605,7 +652,7 @@ void bougerDrone()
                 }
                 std::cerr << "Le robot" << r.numero() << " n'est plus occupe: encore "<< r.tempsLivraison()<< std::endl;
                 r.ordreCharge_ = Ordre(0,0,0);
-            }
+            }                                           /// Robot qui a finit la livraison et le depot
             else if(r.tempsLivraison() - 1 == 0)
             {
                 std::cerr << "Le robot " << r.numero()<< " a livré" << std::endl;
@@ -633,7 +680,7 @@ std::vector<Warehouse> getWarehouseDisponible(Item i)
     return warehouse;
 }
 
-int main()
+void getInput()
 {
     srand(time(NULL));
     // std::string in = std::string(FICHIER+".in"), out = FICHIER+".out";
@@ -704,7 +751,11 @@ int main()
         Robot r(warehouses.at(0).x(),warehouses.at(0).y(),poidsMax,i);
         robots.push_back(r);
     }
+}
 
+int main()
+{
+    getInput();
     updatePriority();
     occuperDrone();
 
