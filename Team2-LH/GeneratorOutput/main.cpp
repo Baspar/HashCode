@@ -5,11 +5,11 @@ int main()
 {
     int N,M;
     std::cin >> N >> M;
-    std::freopen("logo.out","r",stdin);
-    std::freopen("logo.in1","w",stdout);
+    std::freopen("learn_and_teach.out","r",stdin);
+    std::freopen("learn_and_teach.in1","w",stdout);
     std::string line;
     char buff[30];
-    std::vector<std::vector<char> > vecteur(N+1,std::vector<char>(M+1,'.'));
+    std::vector<std::vector<char> > vecteur(N+2,std::vector<char>(M+2,'.'));
     int a,b,c,d;
     getline(std::cin, line);
     while(getline(std::cin,line))

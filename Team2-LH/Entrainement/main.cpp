@@ -1,6 +1,5 @@
 #include <bits/stdc++.h>
 
-
 int main()
 {
 #define LIGNE 2
@@ -8,8 +7,8 @@ int main()
 #define TROU 0
 #define CARRE 3
 
-    std::freopen("logo.in","r",stdin);
-    std::freopen("logo.out","w",stdout);
+    std::freopen("ex.in","r",stdin);
+    std::freopen("ex.out","w",stdout);
     int32_t N,M;
     std::string line;
     std::cin >> N >> M;
@@ -164,17 +163,20 @@ int main()
             }
         }
     }
+
     std::sort(sol.begin(),sol.end());
     sol.erase( unique( sol.begin(), sol.end() ), sol.end() );
     std::cout << sol.size() << std::endl;
+
     std::for_each(sol.begin(),sol.end(),[](auto & x)
     {
         std::cout << x;
     });
+
+
 #undef TROU
 #undef COLONNE
 #undef CARRE
 #undef LIGNE
     return 0;
 }
-
